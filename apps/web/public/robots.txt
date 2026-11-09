@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.searchkit.co
+
+# Sitemaps
+Sitemap: https://www.searchkit.co/sitemap.xml

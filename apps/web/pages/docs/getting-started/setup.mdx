@@ -1,0 +1,46 @@
+---
+title: Quick Start with Searchkit
+---
+
+import { Callout, Tabs } from 'nextra/components'
+export const Tab = Tabs.Tab
+
+## Quick Start
+
+For this quick start, we are going to run Elasticsearch locally and build a small e-commerce search experience using Searchkit and instantsearch.
+
+### Running Elasticsearch
+
+<Callout type="info">
+  This quick start will need CORS enabled as we will be calling Elasticsearch / Opensearch directly from the browser. See <a href="/docs/guides/enable-cors" className="text-blue-600 underline">Enable CORS</a> to do this.
+
+  Alternatively, you can proxy the Elasticsearch / Opensearch requests. See <a href="/docs/proxy-elasticsearch/why" className="text-blue-600 underline">Proxy Elasticsearch</a> for more details.
+</Callout> 
+
+Going to use Elasticsearch via Docker for this quick start. 
+
+For other options, see [Setup Elasticsearch](/docs/guides/setup-elasticsearch).
+
+Below we are running Elasticsearch with CORS enabled and security disabled. For production, you should enable security and use an API key. See [Setup Elasticsearch](/docs/guides/setup-elasticsearch) for more ways of connecting with authentication.
+
+```bash
+docker pull docker.elastic.co/elasticsearch/elasticsearch:8.6.2
+docker network create elastic
+docker run --name elasticsearch --net elastic -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "xpack.security.enabled=false" -e http.cors.enabled=true -e "http.cors.allow-origin='*'" -e http.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization -e http.cors.allow-credentials=true -e network.publish_host=localhost -e xpack.security.enabled=false docker.elastic.co/elasticsearch/elasticsearch:8.6.2
+```
+
+### Index Example E-Commerce Dataset
+
+We are going to use the ecommerce dataset from bestbuy.
+
+Download the sample dataset from [`sample-data/electronics-ecommerce/bulk.json`](https://github.com/searchkit/searchkit/tree/main/sample-data/electronics-ecommerce/bulk.json) and index the documents via the bulk API.
+
+```bash
+curl -H 'Content-Type: application/x-ndjson' -XPOST 'localhost:9200/_bulk?pretty' --data-binary "@bulk.json"
+```
+
+This will add 10000 products to the `products` index.
+
+<Callout type="info">
+  The bulk API requires a newline delimited JSON file. The last line of the file must be a newline character.
+</Callout>

@@ -1,0 +1,17 @@
+{
+  "name": "searchkit-with-cloudflare-workers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "scripts": {},
+  "author": "",
+  "dependencies": {
+    "@searchkit/api": "*",
+    "searchkit": "*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230321.0"
+  },
+  "license": "ISC"
+}

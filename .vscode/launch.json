@@ -1,0 +1,80 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Searchkit Tests",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+            "args": [
+                 "--runInBand", "--forceExit", "--detectOpenHandles", "--watch"
+            ],
+            "cwd": "${workspaceRoot}/packages/searchkit",
+            "env": {
+                "NODE_ENV": "test",
+                "DEBUG": "nock.*"
+            },
+            "runtimeVersion": "20",
+            "console": "integratedTerminal",
+            "sourceMaps": true
+            
+        },
+        {
+            "name": "@searchkit/api Tests ",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+            "args": [
+                 "--runInBand", "--forceExit", "--detectOpenHandles", "--watch"
+            ],
+            "cwd": "${workspaceRoot}/packages/searchkit-api",
+            "env": {
+                "NODE_ENV": "test"
+            },
+            "console": "integratedTerminal",
+            "sourceMaps": true
+        },
+        {
+            "name": "@searchkit/instantsearch-client Tests ",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+            "args": [
+                 "--runInBand", "--forceExit", "--detectOpenHandles", "--watch"
+            ],
+            "cwd": "${workspaceRoot}/packages/searchkit-instantsearch-client",
+            "env": {
+                "NODE_ENV": "test"
+            },
+            "console": "integratedTerminal",
+            "sourceMaps": true
+        },
+        {
+            "name": "@searchkit/elastic-behavioral-analytics-plugin Tests ",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+            "args": [
+                 "--runInBand", "--forceExit", "--detectOpenHandles", "--watch"
+            ],
+            "cwd": "${workspaceRoot}/packages/searchkit-elastic-behavioral-analytics-plugin",
+            "env": {
+                "NODE_ENV": "test"
+            },
+            "console": "integratedTerminal",
+            "sourceMaps": true
+        },
+        {
+          "name": "apps/web debug server-side",
+          "type": "node",
+          "request": "launch",
+          "program": "${workspaceRoot}/node_modules/next/dist/bin/next",
+          "cwd": "${workspaceRoot}/apps/web",
+          "console": "integratedTerminal",
+          "sourceMaps": true
+        },
+    ]
+}

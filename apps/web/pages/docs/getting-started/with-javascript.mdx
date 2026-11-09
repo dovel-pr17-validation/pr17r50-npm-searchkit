@@ -1,0 +1,181 @@
+---
+title: Quick Start with Searchkit
+description: This guide will show you how to get started with Searchkit and instantsearch.js.
+keywords: searchkit, instantsearch, search, javascript, jquery
+---
+
+import { Callout, Tabs } from 'nextra/components'
+export const Tab = Tabs.Tab
+import Setup from './setup.mdx'
+
+## Quick Start with Searchkit and instantsearch.js
+
+This guide will show you how to get started with Searchkit and instantsearch.js.
+
+## Download an Example Project
+
+You can check out a vite + Instantsearch.js project with Searchkit here:
+
+```bash
+curl https://codeload.github.com/searchkit/searchkit/tar.gz/main | \
+tar -xz --strip=2 searchkit-main/examples/with-ui-instantsearchjs
+```
+
+or view the example codebase on github [here](https://github.com/searchkit/searchkit/tree/main/examples/with-ui-instantsearchjs)
+
+## Code Sandbox Example
+
+You can also check out the code sandbox example here:
+
+<iframe src="https://codesandbox.io/embed/github/searchkit/searchkit/tree/main/examples/with-ui-instantsearchjs?fontsize=14&hidenavigation=1&theme=dark&view=preview"
+style={{
+    width: "100%",
+    height: "500px",
+    marginTop: "20px",
+    border: 0,
+    overflow: "hidden",
+    background: "rgb(21, 21, 21)",
+  }}
+     title="with-ui-instantsearchjs"
+     allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media; usb"
+     sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"
+   ></iframe>
+
+<Setup />
+
+### Add CDN scripts to your page
+Installing both the API and instantsearch-client is easy. You can install them with via CDN or npm or yarn.
+
+<Tabs items={['CDN', 'npm', 'yarn']} storageKey="selected-pkg-manager-widgets">
+  <Tab>
+  ```html
+  <script src="https://cdn.jsdelivr.net/npm/@searchkit/instantsearch-client@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/searchkit@latest"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/instantsearch.css@7/themes/algolia-min.css"
+/>
+  ```
+  </Tab>
+  <Tab>
+  ```bash
+  npm install searchkit @searchkit/api @searchkit/instantsearch-client instantsearch.js
+  ```
+  </Tab>
+  <Tab>
+      ```bash
+  yarn add searchkit @searchkit/api @searchkit/instantsearch-client instantsearch.js
+  ```
+  </Tab>
+</Tabs>
+
+### Building the Frontend
+
+Add the html and javascript to your page:
+
+```html
+<div class="ais-InstantSearch">
+
+  <div class="left-panel">
+    <h2>Categories</h2>
+    <div id="categories-list"></div>
+  </div>
+  <div class="right-panel">
+    <div id="searchbox" class="ais-SearchBox"></div>
+    <div id="hits"></div>
+    <div id="pagination"></div>
+  </div>
+</div>
+
+    <script type="text/javascript">
+      /* global instantsearch algoliasearch */
+
+      const sk = new Searchkit({
+        connection: {
+          host: "http://localhost:9200",
+          // cloud_id: "my-cloud-id" // if using Elastic Cloud
+          // if you are authenticating with username/password
+          // https://www.searchkit.co/docs/guides/setup-elasticsearch#connecting-with-usernamepassword
+          //auth: {
+          //  username: "elastic",
+          //  password: "changeme"
+          //},
+          // if you are authenticating with api key
+          // https://www.searchkit.co/docs/guides/setup-elasticsearch#connecting-with-api-key
+          // apiKey: "######"
+        },
+        search_settings: {
+          highlight_attributes: ["name"],
+          snippet_attributes: ["description"],
+          search_attributes: [{ field: "name", weight: 3 }, "description", "categories"],
+          result_attributes: ["name", "description", "price", "categories"],
+          facet_attributes: [{
+            field: "categories.keyword",
+            type: "string",
+            attribute: "categories",
+          }, {
+            field: "price",
+            type: "numeric",
+            attribute: "price",
+          }],
+        }
+      })
+
+      const search = instantsearch({
+        indexName: "products",
+        searchClient: SearchkitInstantsearchClient(sk)
+      });
+
+      search.addWidgets([
+        instantsearch.widgets.searchBox({
+          container: "#searchbox"
+        }),
+        instantsearch.widgets.refinementList({
+          container: "#categories-list",
+          attribute: "categories"
+        }),
+        instantsearch.widgets.hits({
+          container: "#hits",
+          templates: {
+            item(hit, { html, components }) {
+              return html`
+                <h2>
+                  ${hit.__hitIndex}:
+                  ${components.Highlight({ attribute: 'name', hit })}
+                </h2>
+                <p>${components.Snippet({ attribute: 'description', hit })}</p>
+              `;
+            }
+          }
+        }),
+        instantsearch.widgets.pagination({
+          container: "#pagination"
+        })
+      ]);
+
+      search.start();
+    </script>
+
+```
+
+## Video Tutorial
+<iframe width="100%" height="500px" src="https://www.youtube.com/embed/R6iYpEuCdVs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+
+And that's it! You can now search your data in Elasticsearch using instantsearch and Searchkit. Customise the search experience by adding widgets and customising the search settings.
+
+## Adding Refinements
+
+Refinements provide your users with a way to narrow down their search results. 
+
+See the [Refinements](/docs/components/refinements/refinement-list) to add refinements to your search.
+
+## Query Rules
+
+Query rules allow you to customize the search results based on the user's query.
+
+Follow the [query rules guide](/docs/query-rules) to add query rules to your search.
+
+## Deploying to Production
+
+TODO - Contributions welcome

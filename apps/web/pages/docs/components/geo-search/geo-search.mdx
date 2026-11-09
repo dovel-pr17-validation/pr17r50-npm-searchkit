@@ -1,0 +1,212 @@
+---
+title: "Geo Search"
+---
+
+# Geo Search
+
+This guide will walk you through the process of creating a map based search experience. 
+
+## Index Geo Data
+
+In order to create a map based search experience, you will need to index geo data. You must use the `geo_point` type field to index geo data. 
+
+See the [Geo Point Data Type](https://www.elastic.co/guide/en/elasticsearch/reference/current/geo-point.html) for more information on how to index geo data.
+
+Below is an example of how to setup and index geo data into `location` field using the `geo_point` type field.
+
+```json
+PUT my-geo-data
+{
+  "mappings": {
+    "properties": {
+      "location": {
+        "type": "geo_point"
+      }
+    }
+  }
+}
+
+PUT my-geo-data/_doc/1
+{
+  "text": "Geopoint as a string",
+  "location": "41.12,-71.34" 
+}
+```
+
+## Configure Searchkit
+
+Within Searchkit configuration, you will need to specify the `geo_point` field that you indexed geo data into. 
+
+```js
+const searchkitClient = new Searchkit({
+  connection: {
+    host: 'http://localhost:9200'
+  },
+  search_settings: {
+    result_attributes: ["text"],
+    search_attributes: [],
+    geo_attribute: "location"
+  }
+})
+```
+
+## Create a Map Based Search Experience
+
+To create a map based search experience, you will use Instantsearch map components. 
+
+Below is an example of a map based search experience built with `react-instantsearch` (v7) and the `useGeoSearch` hook. The map is a small `GeoMap` component that loads the Google Maps JavaScript API, draws a marker for each geo hit and refines the results to the visible map bounds.
+
+Save this as `components/GeoMap.jsx`:
+
+```js
+import { useEffect, useRef, useState } from 'react'
+import { useGeoSearch } from 'react-instantsearch'
+
+// Loads the Google Maps JavaScript API once per page.
+let googleMapsPromise = null
+function loadGoogleMaps(apiKey, endpoint) {
+  if (window.google?.maps) return Promise.resolve(window.google)
+  if (!googleMapsPromise) {
+    googleMapsPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = `${endpoint}&key=${apiKey}`
+      script.async = true
+      script.onload = () => resolve(window.google)
+      script.onerror = () => {
+        googleMapsPromise = null
+        reject(new Error('Failed to load Google Maps'))
+      }
+      document.head.appendChild(script)
+    })
+  }
+  return googleMapsPromise
+}
+
+export default function GeoMap({ apiKey, endpoint, height = 500 }) {
+  const containerRef = useRef(null)
+  const mapRef = useRef(null)
+  const markersRef = useRef([])
+  // The map fires `idle` after our own moves (creating the map, fitting bounds). Those must not
+  // refine the results, or every later search would look like a map move.
+  const ignoreIdleRef = useRef(true)
+  const [google, setGoogle] = useState(null)
+  const { items, refine, isRefinedWithMap } = useGeoSearch({})
+
+  const refineRef = useRef(refine)
+  refineRef.current = refine
+  const isRefinedWithMapRef = useRef(isRefinedWithMap)
+  isRefinedWithMapRef.current = isRefinedWithMap
+
+  useEffect(() => {
+    let cancelled = false
+    loadGoogleMaps(apiKey, endpoint)
+      .then((g) => {
+        if (!cancelled) setGoogle(g)
+      })
+      .catch((error) => console.error(error))
+    return () => {
+      cancelled = true
+    }
+  }, [apiKey, endpoint])
+
+  useEffect(() => {
+    if (!google || mapRef.current || !containerRef.current) return
+    const map = new google.maps.Map(containerRef.current, {
+      center: { lat: 0, lng: 0 },
+      zoom: 3,
+    })
+    map.addListener('idle', () => {
+      if (ignoreIdleRef.current) {
+        ignoreIdleRef.current = false
+        return
+      }
+      const bounds = map.getBounds()
+      if (!bounds) return
+      const ne = bounds.getNorthEast()
+      const sw = bounds.getSouthWest()
+      refineRef.current({
+        northEast: { lat: ne.lat(), lng: ne.lng() },
+        southWest: { lat: sw.lat(), lng: sw.lng() },
+      })
+    })
+    mapRef.current = map
+  }, [google])
+
+  useEffect(() => {
+    if (!google || !mapRef.current) return
+    markersRef.current.forEach((marker) => marker.setMap(null))
+    const geoHits = items.filter((hit) => hit._geoloc)
+    markersRef.current = geoHits.map(
+      (hit) =>
+        new google.maps.Marker({
+          position: { lat: hit._geoloc.lat, lng: hit._geoloc.lng },
+          map: mapRef.current,
+          title: hit.title || hit.name,
+        })
+    )
+    // Fit the map to the results when they change for a non-map reason (a search or filter).
+    // When the user moved the map, the results are refined to the map's bounds, so keep the view.
+    if (!isRefinedWithMapRef.current() && geoHits.length > 0) {
+      const bounds = new google.maps.LatLngBounds()
+      geoHits.forEach((hit) =>
+        bounds.extend({ lat: hit._geoloc.lat, lng: hit._geoloc.lng })
+      )
+      ignoreIdleRef.current = true
+      mapRef.current.fitBounds(bounds)
+    }
+  }, [google, items])
+
+  return <div ref={containerRef} style={{ height }} />
+}
+```
+
+Then use it inside your search page:
+
+```js
+import { InstantSearch, Hits } from 'react-instantsearch';
+import Client from '@searchkit/instantsearch-client'
+import Searchkit from "searchkit"
+import GeoMap from './components/GeoMap'
+import Client from '@searchkit/instantsearch-client'
+import Searchkit from "searchkit"
+
+const apiKey = 'AIzaSyCnxbEhpVqsd7m-dDGb3mJrFEnZFSKdKOU';
+const endpoint = 'https://maps.googleapis.com/maps/api/js?v=weekly';
+
+const searchkitClient = new Searchkit({
+  connection: {
+    host: 'http://localhost:9200'
+  },
+  search_settings: {
+    result_attributes: ["text"],
+    search_attributes: [],
+    geo_attribute: "location"
+  }
+})
+
+const searchClient = Client(searchkitClient);
+
+export default function Web() {
+    return (  
+      <InstantSearch
+        indexName="my-geo-data"
+        searchClient={searchClient}
+      >
+        <GeoMap apiKey={apiKey} endpoint={endpoint} height={500} />
+
+        <div className="right-panel">
+          <Hits />
+        </div>
+      </InstantSearch>
+    );
+}
+```
+
+## Live Demo
+
+You can view a live demo of this guide [here](/geo-search-demo).
+
+## Documentation
+
+* [JS Widgets](https://www.algolia.com/doc/api-reference/widgets/geo-search/js/)
+* [React InstantSearch](https://www.algolia.com/doc/api-reference/widgets/geo-search/react/)

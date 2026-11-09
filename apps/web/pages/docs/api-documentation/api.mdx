@@ -1,0 +1,144 @@
+---
+title: Node API
+description: Searchkit Node API for Elasticsearch
+keywords: ["searchkit", "tutorial", "walkthrough", "elasticsearch", "react", "javascript", "typescript", "search", "search ui", "search experience", "site search", "app search"]
+---
+import { Tabs, Tab } from '../../../components/Tabs'
+
+### Installation
+
+It is available as `@searchkit/api` on npm.
+
+<Tabs items={['npm', 'yarn']} storageKey="selected-package-manager">
+<Tab>
+```sh
+npm install @searchkit/api@latest
+```
+</Tab>
+<Tab>
+```sh
+yarn add @searchkit/api@latest
+```
+</Tab>
+</Tabs>
+
+Then import it in your project:
+
+```js
+import Client from "@searchkit/api";
+```
+
+### Usage
+
+Node client handles incoming instantsearch requests, transforms them into Elasticsearch queries. With the response, it transforms it into a format that instantsearch can understand.
+
+The client is built in a way to simplify the integration with multiple node server frameworks.
+
+Read more on how to configure Searchkit on [Searchkit API docs](/docs/api-documentation/searchkit).
+
+```ts
+
+import Client from "@searchkit/api";
+
+// SearchkitConfig is the configuration object that is used to configure the client
+const client = Client({
+  connection: {
+    host: "https://commerce-demo.es.us-east4.gcp.elastic-cloud.com:9243",
+    apiKey: "a2Rha1VJTUJMcGU4ajA3Tm9fZ0Y6MjAzX2pLbURTXy1hNm9SUGZGRlhJdw==", // optional apiKey
+    headers: { // optional headers sent to Elasticsearch. Useful for basic auth
+      "Authorization", 'Basic ' + Buffer.from(username + ":" + password).toString('base64'),
+      "my-custom-header": "my-custom-value"
+    },
+  },
+  search_settings: {
+    highlight_attributes: ["title", "actors"],
+    search_attributes: ["title", "actors"],
+    result_attributes: ["title", "actors", "poster", "year"],
+    facet_attributes: [
+      "type",
+      { attribute: "actors", field: "actors.keyword" },
+      "rated",
+      { attribute: "imdbrating", type: "numeric" },
+      { attribute: "metascore", type: "numeric" },
+    ],
+  },
+});
+```
+
+### `HandleRequest` function
+
+The `handleRequest` method is used to handle incoming REST requests from the browser. It takes in multiple instantsearch `SearchRequest` objects and returns multiple instantsearch `SearchResponse` objects.
+
+#### Usage
+
+```tsx
+// function to handle the incoming request
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  // invokes handleRequest passing in the request body
+  // containing the search requests
+  const results = await client.handleRequest(req.body, {
+    // optional functions to adjust the Elasticsearch query
+    // see Request Options below
+
+    // example of modifying the query that performs the organic match query
+    getQuery(query, search_attributes, config) {
+      return {
+        combined_fields: {
+          query: query,
+          fields: search_attributes.map((attr) => (typeof attr === 'string' ? attr : attr.field))
+        }
+      }
+    },
+
+    // example of adding a base filter to the query
+    getBaseFilters: () => {
+      return [
+        {
+          bool: {
+            must: {
+              term: {
+                status: {
+                  value: "published",
+                },
+              },
+            },
+          },
+        },
+      ];
+    }
+  });
+  // returning back the results to the browser
+  res.send(results);
+}
+```
+
+#### Parameters
+
+The `handleRequest` function takes in the following parameters:
+
+- **body** - The request body containing the search requests.
+- **RequestOptions** - Optional. Request Options object thats used to change the request & response before it is sent to Elasticsearch. You can read more about these options in the [Searchkit API docs](/docs/api-documentation/searchkit#request-options).
+
+### Debug mode
+
+The client can be run in debug mode to help with debugging the Elasticsearch query. To run the client in debug mode, set the `debug` flag to `true` in the `Client` function.
+
+This is helpful when you're overriding the query via `getQuery` or providing base filters via `getBaseFilters` and want to see the Elasticsearch query that is executed to Elasticsearch.
+
+```ts
+const client = Client({
+  // search_settings configuration
+  connection: {
+    // ...
+  },
+  search_settings: {
+    search_attributes: ["title", "plot"],
+    // ...
+  }
+}, { debug: true });
+```
+
+When the client is run in debug mode, the Elasticsearch query is logged to the console.

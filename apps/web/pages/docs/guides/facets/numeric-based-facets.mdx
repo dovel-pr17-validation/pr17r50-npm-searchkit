@@ -1,0 +1,49 @@
+---
+title: Numeric based
+description: Searchkit supports a number of different instantsearch facet components. The following examples show what components are supported and how to add them to your search application.
+keywords: searchkit, search, faceting
+---
+
+Searchkit API supports a number of different instantsearch facet components. The following examples show what components are supported and how to add them to your search application.
+
+Below we will show how to setup a field in Elasticsearch to be used as a facet attribute. You will then be able to use the facet attribute with instantsearch components.
+
+### Defining a facet attribute
+
+By default, any numeric type field in Elasticsearch will be defined as a numeric type field. the numeric type field is can be used for aggregations.
+
+Read more about Elasticsearch dynamic field mapping in the [Elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/dynamic-field-mapping.html).
+
+The following document indexed in Elasticsearch:
+
+```json
+{
+  "price": 90
+}
+```
+
+Will result in the following mapping
+
+```json
+{
+  "price": {
+    "type": "long"
+  }
+}
+```
+
+The field can be used for facet attributes. In this case, the facet field should be `price`.
+
+```json
+{
+  "facet_attributes": [{ "attribute": "price", "type": "numeric", "field": "price" }]
+}
+```
+
+We need to define the field type as `numeric` as some of the instantsearch components require stats about the field. With the field type defined as `numeric`, we generate stats about the field for the instantsearch components.
+
+Then you can use instantsearch components using the `price` facet attribute.
+
+# Instantsearch Components
+
+See the [Refinement Facets](/docs/components/refinements/refinement-list) components on how to use.

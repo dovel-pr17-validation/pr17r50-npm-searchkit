@@ -1,0 +1,69 @@
+{
+      "properties": {
+        "address": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "availabilities": {
+          "type": "nested",
+          "properties": {
+            "end": {
+              "type": "date"
+            },
+            "price": {
+              "type": "long"
+            },
+            "start": {
+              "type": "date"
+            }
+          }
+        },
+        "categories_lvl1": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "categories_lvl2": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "description": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "location": {
+          "type": "geo_point"
+        },
+        "name": {
+          "type": "text"
+        },
+        "region": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        }
+      }
+    }

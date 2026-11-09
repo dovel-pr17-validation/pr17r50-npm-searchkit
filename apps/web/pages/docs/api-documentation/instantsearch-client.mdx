@@ -1,0 +1,127 @@
+---
+title: Browser Client
+description: Instanstsearch client for React Instantsearch
+---
+import { Tabs, Tab } from '../../../components/Tabs'
+
+### Installation
+
+It is available as `@searchkit/instantsearch-client` on npm.
+
+<Tabs items={['npm', 'yarn', 'CDN']} storageKey="cloud-package-manager">
+<Tab>
+```sh
+npm install @searchkit/instantsearch-client
+```
+</Tab>
+<Tab>
+```sh
+yarn add @searchkit/instantsearch-client
+```
+</Tab>
+<Tab>
+```html
+<script src="https://cdn.jsdelivr.net/npm/@searchkit/instantsearch-client@latest"></script>
+```
+</Tab>
+</Tabs>
+
+Then import it in your project:
+
+```js
+import Client from "@searchkit/instantsearch-client";
+// OR if using CDN
+const Client = window.SearchkitInstantsearchClient
+```
+
+### Usage
+
+Below is a simple example of how to use the client to use React Instantsearch with Instantsearch Elasticsearch adapter.
+
+Node API route has been setup under `/api/search` and the client is used to fetch the results from the API.
+
+```tsx
+const searchClient = Client({
+  // the url of your instantsearch-elasticsearch-adapter API endpoint
+  url: "/api/search",
+});
+
+export default function Web() {
+  return (
+    <div className="ais-InstantSearch">
+      <InstantSearch indexName="imdb_movies" searchClient={searchClient}>
+        <SearchBox />
+        <Hits />
+      </InstantSearch>
+    </div>
+  );
+}
+```
+
+### Headers
+
+You can pass headers to the client to be sent with each request.
+
+```js
+const searchClient = Client({
+  url: "/api/search",
+  headers: {
+    "x-api-key": "my-api-key",
+  },
+});
+```
+
+or you can pass a function that returns headers.
+
+```js
+const searchClient = Client({
+  url: "/api/search",
+  headers: () => ({
+    auth: "Bearer" + window.localStorage.getItem("token"),
+  }),
+});
+```
+
+### Use Elasticsearch Directly
+
+You can also use the client to directly query Elasticsearch from the browser, skipping needing a node API in the middle. This is useful if you're proxying the Elasticsearch API through your own application API.
+
+[Working demo](/browser-only-demo) available.
+
+```js
+
+import Client from '@searchkit/instantsearch-client'
+import Searchkit, { SearchkitConfig } from "searchkit"
+import { config } from "./api/config"
+
+const sk = new Searchkit({
+  connection: {
+    host: "http://localhost:9200"
+    // cloud_id: "my-cloud-id" if using Elastic Cloud
+  },
+  search_settings: {
+    // ... see Searchkit API docs for configuration options
+  }
+})
+
+const searchClient = Client(sk, {
+  // ... see Searchkit API docs for configuration options
+  // example of modifying the query that performs the organic match query
+  getQuery(query, search_attributes, config) {
+    return {
+      combined_fields: {
+        query: query,
+        fields: search_attributes.map((attr) => (typeof attr === 'string' ? attr : attr.field))
+      }
+    }
+  }
+});
+
+```
+
+#### Parameters
+
+The client accepts the following parameters:
+
+- **Configuration** - The Searchkit instance.
+- **RequestOptions** - **Optional**. The Searchkit RequestOption. This is useful for modifying the request and response before it is sent to Elasticsearch. This is useful for modifying the request body, or modifying the response. You can read more about these options in the [Searchkit API docs](/docs/api-documentation/searchkit#request-options).
