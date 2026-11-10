@@ -37,6 +37,6 @@
     "eslint-config-custom": "*",
     "tailwindcss": "^3.4.19",
     "tsconfig": "*",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }
